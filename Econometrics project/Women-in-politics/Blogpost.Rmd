@@ -1,0 +1,93 @@
+---
+output: html_document
+title: "Women in politics"
+author: "Coraline Best"
+class: "EC423 Econometrics"
+---
+
+![](Desktop/UofO/Econometrics%20/blog%20picture.jpg)
+
+1.  [**Introduction**]{.ul}
+
+There has been a huge improvement in the role of gender in society and this transition has been amazing. These changes in the last decades are very difficult to measure but we can underline that it could be due to a change in cultural attitudes, norms, technological advances…
+Despite these many advances in recent decades, gender inequalities persist throughout the world in many dimensions of daily life. Although gender inequalities are present all around the world, they are particularly noticeable in developing countries. These gender inequalities appear especially in the fields of education, health care and as a result in the access to employment. 
+Politics is an environment where women are very little represented. Indeed, women are not as involved as men in the decision-making process. Without a representation at the same level, it is difficult for women to influence the decisions making process. Therefore, the parity is not reached yet. Parity means the equal representation of women and men in decision-making positions. But even the most “progressive” countries don’t have parity in politics, and men are most of the time, more represented. This under representation of women in politics represents a serious democratic deficit. In this study I am interested to observe the proportion of seats held by women in national parliaments. To do so, I used the data collected by the World Bank. These data represent the proportion of seats that women hold in national parliaments around the world. The proportion of seats held by women in national parliaments is the number of seats held by women members in single or lower chambers of national parliament, expressed as a percentage of all occupied seats. In this study, I am much more interested to show you the evolution of the proportion of women in politics over the last decades rather than explaining the causes of the under representation of women in politics.
+
+
+2.  [**Data Analysis**]{.ul}
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+#load packages
+library(pacman)
+p_load(readr, dplyer, stargazer, broom, sandwich, tidyverse, ggplot2, readxl,rgdal, maps, viridis, ggh4x)
+
+#set working directory
+women_in_politics <- read_excel("/Users/coraline/Desktop/UofO/Econometrics\ /API_SG.GEN.PARL.ZS_DS2_en_excel_v2_3163237.xls", sheet = "DataWomeninPolitics", range = cell_rows(1:267),  col_names = TRUE)
+
+write.csv(women_in_politics, "womenworld.csv", row.names = TRUE)
+womenworld <- read_csv('womenworld.csv')
+
+#Data cleaning
+womenworld <- womenworld %>% select(-1)
+
+womenworld= womenworld %>% select(-5, -6, -7, -8, -8,-9,-10,-11,-12, -13, -14, -15, -16, -17, -18, -19, -20, -21, -22, -23, -24, -25, -26, -27, -28, -29, -30, -31, -32, -33, -34,-35, -36, -37, -38, -39, -40, -41)
+
+womenworld <- womenworld %>% pivot_longer(cols = c ("1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016","2017", "2018", "2019", "2020"), names_to = "year", values_to = "percentagewomen ")
+
+colnames(womenworld) [1] <- "region"
+
+
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+#map of the world 
+
+world_map <- map_data("world")
+women_map_world <- left_join(womenworld, world_map, by = "region")
+
+Year <- subset(women_map_world, year == "2020")
+ggplot(Year, aes(map_id = region, fill = `percentagewomen `)) + geom_map( map = Year, color= "white") + expand_limits(x = Year$long, y = Year$lat) + scale_fill_viridis_c(option = "C") + ggtitle("Map of the proportion of women in national parliaments in 2020")
+```
+
+This map of the world represents the proportion of women in national parliaments in the world in 2020 according to colors. The darker the color is (dark blue for instance) means that the lower the percentage of women in the parliament is. This is obviously valid in the opposite case, when the color becomes lighter (yellow for example) it means that the country has a high percentage of women represented in parliament. In general, we notice that there is a biggest presence of purple and pink colors which means that most countries have a  percentage between 20% and 40% of women represented in politics. We can still see some countries in yellow/orange including Mexico, Bolivia, Sweden and so on. I would like to point out that some countries have no color and it is normal because the World Bank could not collect data for these countries (I am referring in particular to Greenland and Sudan). 
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+#Seats held by women evolution during year
+
+
+ggplot(data = womenworld, aes(x = year, y =`percentagewomen `, group = 1)) + geom_point(stat = "summary", fun = "mean", color = "purple") +xlab("Years") + ylab("Proportion of women")  + ggtitle("Proportion of women in national parliaments in the world") +scale_x_discrete(breaks = c(2000,2005,2010,2015,2020)) + theme_minimal() + geom_smooth(method = lm, se = FALSE, color= "grey")
+```
+
+This graph represents the proportion of women in national parliaments in the world from 1997 to 2020. The first thing I can say is that the percentage of women in parliaments around the world has been increasing since 1997. This constant evolution can be explained by a change in cultural attitudes, norms, or also technological changes. The second thing I want to say, and that shocks me the most is that in 2020 there were about 25,58% of women represented in the world at parliamentary level. Despite all the progresses in reducing gender inequalities, women in 2020 are still underrepresented in parliaments. As a result, at the global level, we can see that we are far from reaching parity.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE }
+#Proportion of women in parliament in France
+
+France <- subset(womenworld , region == "France")
+
+ggplot(data = France, aes(x = year, y =`percentagewomen `, group = 1)) + geom_line(color= "purple")+ xlab("Years") + ylab("Proportion of Women") +ggtitle("Proportion of women in the French parliament") + scale_x_discrete(breaks = c(2000,2005,2010,2015,2020))  + theme_minimal()
+
+
+
+
+```
+
+As an international exchange student from France, I found it really interesting to make a specific graph for my home country. As we can see on this graph, the proportion of women in parliament in France has not stopped increasing since 1997. To give you an idea, in 2005, France was 85th among countries for the representation of women in parliament, while in 2017 France was ranked 17th. What could explain this extraordinary evolution? To be honest I don't even know myself the reasons for this spectacular progression. As I said in my introduction, I think it is very difficult to measure these changes. However, France has not yet reached parity. We can see that in 2020 France has a 39,5% of women in the parliament and would need at least 10% more of women to reach the 50%.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+#comparison of two countries 
+
+MaldivesBolivia = subset(womenworld, region == "Maldives" |region == "Bolivia")
+
+ggplot(data =  MaldivesBolivia, aes(x= year, y=`percentagewomen `, group= region )) + geom_line(aes(color = region)) + scale_color_manual( values = c("green", "orange"))+ scale_x_discrete(breaks = c(2000,2005,2010,2015,2020))  + theme_minimal() + xlab("Years") + ylab ("Proportion of Women") + ggtitle(" Proportion of Women in Parliaments in Bolivia and Maldives")
+
+```
+
+Concerning this graph, I decided to compare two countries which are Bolivia and the Maldives. I chose to represent these two countries because they are very different in terms of percentages of women in parliament. As we can see, for the Maldives the percentage of women in parliament has always been very low compared to Bolivia. Indeed, we see that for the Maldives the percentage of women in parliament reaches 4,6% in 2020 which is a very low level and highlights that woman are underrepresented in this country. One reason for this very low percentage could be explained by the influence of radical clerics who sought out to limit women's social and cultural life. On the contrary, Bolivia has experienced a spectacular evolution in the percentage of women present in the parliament from 25.4% to 53.08% from 2013 to 2014. This makes Bolivia one of the countries in the world that is best represented by women. In fact, in 2014 Bolivia reached parity with even more women in parliament than men. This blatant progress was made possible under the leadership of President Juan Evo Morales, where Bolivians approved a new constitution by referendum that grants more right to indigenous people and women.
+
+3.  [**Conclusion**]{.ul}
+
+To conclude this study, I would like to give some reasons that, in my opinion, explain why women are less represented in politics. It is very difficult to measure the level of confidence of an individual, but I think that the level of confidence can play an important role towards the quest for parity. I think that also from a cultural point of view, politics is a "men's world". Finally, I think that the constraint of childcare can limit women. These are just assumptions of course, and it would certainly be more interesting to know and identify what really causes the under representation of women in politics.
+
+Quoted works: <https://www.haut-conseil-egalite.gouv.fr/parite/reperes-statistiques/> <https://data.worldbank.org/indicator/SG.GEN.PARL.ZS?end=2020&start=1997&view=chart> <https://www.amnesty.fr/pays/maldives>
